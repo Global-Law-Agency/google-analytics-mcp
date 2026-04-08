@@ -9,4 +9,4 @@ RUN pip install --no-cache-dir . uvicorn starlette sse-starlette
 
 EXPOSE 8000
 
-CMD ["uvicorn", "analytics_mcp.server_sse:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD uvicorn analytics_mcp.server_sse:app --host 0.0.0.0 --port ${PORT:-8000}
