@@ -2,16 +2,42 @@
 
 """SSE transport entry point for deploying the MCP server on Render.com."""
 
+import hmac
 import os
 import tempfile
 
 import uvicorn
 from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
-from starlette.responses import PlainTextResponse
+from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse, JSONResponse
 from starlette.routing import Mount, Route
 
 import analytics_mcp.coordinator as coordinator
+
+
+class BearerAuthMiddleware(BaseHTTPMiddleware):
+    """Require a Bearer token on all routes except /health."""
+
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path == "/health":
+            return await call_next(request)
+
+        api_key = os.environ.get("API_KEY")
+        if not api_key:
+            return await call_next(request)
+
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return JSONResponse({"error": "Missing Bearer token"}, status_code=401)
+
+        token = auth_header[len("Bearer "):]
+        if not hmac.compare_digest(token, api_key):
+            return JSONResponse({"error": "Invalid Bearer token"}, status_code=403)
+
+        return await call_next(request)
 
 
 def _setup_credentials():
@@ -57,6 +83,7 @@ def create_app() -> Starlette:
             Route("/sse", endpoint=handle_sse),
             Mount("/messages/", app=sse.handle_post_message),
         ],
+        middleware=[Middleware(BearerAuthMiddleware)],
     )
     return app
 

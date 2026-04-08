@@ -7,5 +7,7 @@ services:
     envVars:
       - key: GOOGLE_APPLICATION_CREDENTIALS_JSON
         sync: false  # Prompt to fill in during deploy
+      - key: API_KEY
+        generateValue: true  # Render auto-generates a random secret
       - key: PORT
         value: "8000"
