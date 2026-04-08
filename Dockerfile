@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY pyproject.toml .
+COPY pyproject.toml README.md ./
 COPY analytics_mcp/ analytics_mcp/
 
 RUN pip install --no-cache-dir . uvicorn starlette sse-starlette

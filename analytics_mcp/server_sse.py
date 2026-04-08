@@ -2,13 +2,13 @@
 
 """SSE transport entry point for deploying the MCP server on Render.com."""
 
-import json
 import os
 import tempfile
 
 import uvicorn
 from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
+from starlette.responses import PlainTextResponse
 from starlette.routing import Mount, Route
 
 import analytics_mcp.coordinator as coordinator
@@ -47,9 +47,13 @@ def create_app() -> Starlette:
                 coordinator.app.create_initialization_options(),
             )
 
+    async def health(request):
+        return PlainTextResponse("ok")
+
     app = Starlette(
         debug=False,
         routes=[
+            Route("/health", endpoint=health),
             Route("/sse", endpoint=handle_sse),
             Mount("/messages/", app=sse.handle_post_message),
         ],

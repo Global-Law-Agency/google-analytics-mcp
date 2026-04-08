@@ -3,7 +3,7 @@ services:
     name: google-analytics-mcp
     runtime: docker
     plan: starter
-    healthCheckPath: /sse
+    healthCheckPath: /health
     envVars:
       - key: GOOGLE_APPLICATION_CREDENTIALS_JSON
         sync: false  # Prompt to fill in during deploy
